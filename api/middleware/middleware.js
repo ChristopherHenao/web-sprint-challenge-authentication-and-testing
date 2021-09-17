@@ -1,4 +1,5 @@
 const db = require('../../data/dbConfig')
+const utils = require('../auth/auth-model')
 
 const checkUsernameIsFree = async (req, res, next) => {
     const exists = await db('users').where('username', req.body.username.trim())
@@ -22,8 +23,22 @@ const validateUser = async (req, res, next) => {
     }
 }
 
+const checkUsernameExists = async (req, res, next) => {
+    const [user] = await utils.findBy({ username: req.body.username })
+    if (!user) {
+      next({ status: 401, message: 'Invalid credentials' })
+    }
+    else {
+      req.user = user
+      next()
+    }
+}
+
+
+
 module.exports = {
     checkUsernameIsFree,
-    validateUser
+    validateUser,
+    checkUsernameExists
   }
   

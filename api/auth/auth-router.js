@@ -3,7 +3,7 @@ const db = require('../../data/dbConfig')
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback secret'
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { checkUsernameIsFree, validateUser } = require('../middleware/middleware')
+const { checkUsernameIsFree, validateUser, checkUsernameExists } = require('../middleware/middleware')
 const utils = require('./auth-model')
 
 router.post('/register', checkUsernameIsFree, validateUser, async (req, res, next) => {
@@ -44,8 +44,7 @@ router.post('/register', checkUsernameIsFree, validateUser, async (req, res, nex
     }
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', validateUser, checkUsernameExists, (req, res, next) => {
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -69,6 +68,28 @@ router.post('/login', (req, res) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
+    if (bcrypt.compareSync(req.body.password, req.user.password)) {
+      const token = buildToken(req.user)
+      res.json({ 
+        message: `${req.user.username} is back!`,
+        token: token
+      })
+    }
+    else {
+      next({ status: 401, message: 'Invalid credentials'})
+    }
 });
+
+function buildToken(user) {
+  const payload = {
+    subject: user.user_id,
+    role_name: user.role_name,
+    username: user.username
+  }
+  const options = {
+    expiresIn: '1d'
+  }
+  return jwt.sign(payload, JWT_SECRET, options)
+}
 
 module.exports = router;
