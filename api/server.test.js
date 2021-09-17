@@ -1,3 +1,9 @@
+const server = require('../api/server')
+const db = require('../data/dbConfig')
+const bcrypt = require('bcryptjs')
+const jwtDecode = require('jwt-decode')
+const request = require('supertest')
+
 test('sanity', () => {
   expect(true).toBe(true)
 })
