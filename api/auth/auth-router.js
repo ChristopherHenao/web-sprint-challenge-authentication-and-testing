@@ -1,7 +1,12 @@
 const router = require('express').Router();
+const db = require('../../data/dbConfig')
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback secret'
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const { checkUsernameIsFree, validateUser } = require('../middleware/middleware')
+const utils = require('./auth-model')
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+router.post('/register', checkUsernameIsFree, validateUser, async (req, res, next) => {
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -27,6 +32,16 @@ router.post('/register', (req, res) => {
     4- On FAILED registration due to the `username` being taken,
       the response body should include a string exactly as follows: "username taken".
   */
+    
+    const { username, password } = req
+    const hash = bcrypt.hashSync(password, 8)
+    try {
+      const newUser = await utils.addUser({ username, password: hash})
+      res.status(201).json(newUser)
+    }
+    catch (error) {
+      next(error)
+    }
 });
 
 router.post('/login', (req, res) => {
