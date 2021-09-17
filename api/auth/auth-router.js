@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const db = require('../../data/dbConfig')
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback secret'
+const JWT_SECRET = require('../../secret')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { checkUsernameIsFree, validateUser, checkUsernameExists } = require('../middleware/middleware')
@@ -71,7 +71,7 @@ router.post('/login', validateUser, checkUsernameExists, (req, res, next) => {
     if (bcrypt.compareSync(req.body.password, req.user.password)) {
       const token = buildToken(req.user)
       res.json({ 
-        message: `${req.user.username} is back!`,
+        message: `welcome, ${req.user.username}`,
         token: token
       })
     }
@@ -82,8 +82,7 @@ router.post('/login', validateUser, checkUsernameExists, (req, res, next) => {
 
 function buildToken(user) {
   const payload = {
-    subject: user.user_id,
-    role_name: user.role_name,
+    subject: user.id,
     username: user.username
   }
   const options = {
